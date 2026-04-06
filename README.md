@@ -92,12 +92,6 @@ npm run dev
 
 ---
 
-## 📸 Screenshots
-
-
-
----
-
 ## 📌 About This Project
 
 This project was created as part of a frontend assignment to demonstrate:
