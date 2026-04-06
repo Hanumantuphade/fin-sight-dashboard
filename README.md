@@ -94,7 +94,7 @@ npm run dev
 
 ## 📸 Screenshots
 
-*Add your project screenshots here for better presentation.*
+
 
 ---
 
