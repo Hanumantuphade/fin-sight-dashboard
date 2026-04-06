@@ -1,10 +1,72 @@
 import { useMemo } from "react"
 import { useApp } from "../context/AppContext"
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend } from "recharts"
-import { COLORS } from "../data/transactions"
+import {
+  BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend
+} from "recharts"
+import {
+  ShoppingBag, PiggyBank, TrendingUp, Target, BarChart3, Wallet
+} from "lucide-react"
+import { COLORS } from "../data/transactionsData"
+import { motion } from "framer-motion"
 
 function formatINR(n) {
   return "₹" + n.toLocaleString("en-IN")
+}
+
+const container = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.08 } }
+}
+
+const item = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 }
+}
+
+/* ✅ CARD (FIXED DARK BG) */
+function Card({ icon: Icon, title, value, subtitle, color }) {
+  return (
+    <motion.div
+      variants={item}
+      whileHover={{ scale: 1.04 }}
+      className="
+        rounded-2xl p-5 border transition
+        
+        /* LIGHT */
+        bg-white border-stone-200 shadow-sm
+        
+        /* DARK (FIXED - NOT PURE BLACK) */
+        dark:bg-[#111827] dark:border-stone-700
+      "
+    >
+      <div className="flex items-start gap-4">
+        
+        <div
+          className="p-3 rounded-xl"
+          style={{
+            backgroundColor: color + "20",
+            color: color,
+          }}
+        >
+          <Icon size={20} />
+        </div>
+
+        <div>
+          <p className="text-xs text-stone-400 mb-1 uppercase tracking-wide">
+            {title}
+          </p>
+
+          <p className="text-xl font-semibold text-stone-800 dark:text-white">
+            {value}
+          </p>
+
+          <p className="text-sm text-stone-500 dark:text-stone-400 mt-1">
+            {subtitle}
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  )
 }
 
 export default function Insights() {
@@ -31,12 +93,8 @@ export default function Insights() {
     return Object.values(map)
   }, [transactions])
 
-  const totalIncome = transactions
-    .filter((t) => t.type === "income")
-    .reduce((s, t) => s + t.amount, 0)
-  const totalExpenses = transactions
-    .filter((t) => t.type === "expense")
-    .reduce((s, t) => s + t.amount, 0)
+  const totalIncome = transactions.filter((t) => t.type === "income").reduce((s, t) => s + t.amount, 0)
+  const totalExpenses = transactions.filter((t) => t.type === "expense").reduce((s, t) => s + t.amount, 0)
   const totalSpend = expensesByCategory.reduce((s, [, v]) => s + v, 0)
 
   const savingsRate =
@@ -48,89 +106,114 @@ export default function Insights() {
 
   return (
     <div className="p-4 md:p-8">
-      <h1 className="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-1">Insights</h1>
-      <p className="text-sm text-stone-500 mb-6">Spending patterns and analysis</p>
+      
+      {/* Header */}
+      <h1 className="text-xl font-semibold text-stone-800 dark:text-white mb-1">
+        Insights
+      </h1>
+      <p className="text-sm text-stone-500 dark:text-stone-400 mb-6">
+        Key observations from your financial data
+      </p>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-        <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl p-4">
-          <p className="text-xs text-stone-400 mb-1">Top Category</p>
-          <p className="text-lg font-semibold text-stone-800 dark:text-stone-100">
-            {topCategory ? topCategory[0] : "—"}
-          </p>
-          <p className="text-xs text-stone-400 mt-0.5">
-            {topCategory ? formatINR(topCategory[1]) + " total" : ""}
-          </p>
-        </div>
+      {/* CARDS */}
+      <motion.div
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"
+      >
+        <Card icon={ShoppingBag} title="Top Spending"
+          value={topCategory ? topCategory[0] : "—"}
+          subtitle={topCategory ? `${formatINR(topCategory[1])}` : "No data"}
+          color="#f43f5e"
+        />
 
-        <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl p-4">
-          <p className="text-xs text-stone-400 mb-1">Savings Rate</p>
-          <p className={`text-lg font-semibold ${savingsRate >= 20 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"}`}>
-            {savingsRate}%
-          </p>
-          <p className="text-xs text-stone-400 mt-0.5">
-            {savingsRate >= 20 ? "Above 20% target" : "Below 20% target"}
-          </p>
-        </div>
+        <Card icon={PiggyBank} title="Savings Rate"
+          value={`${savingsRate}%`}
+          subtitle={savingsRate >= 20 ? "Healthy" : "Improve"}
+          color="#10b981"
+        />
 
-        <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl p-4">
-          <p className="text-xs text-stone-400 mb-1">Observation</p>
-          <p className="text-sm text-stone-700 dark:text-stone-300 leading-relaxed">
-            {topCategory
-              ? `${topCategory[0]} is ${Math.round((topCategory[1] / totalSpend) * 100)}% of your expenses`
-              : "No data yet"}
-          </p>
-        </div>
-      </div>
+        <Card icon={TrendingUp} title="Total Expenses"
+          value={formatINR(totalExpenses)}
+          subtitle="Overall spending"
+          color="#ef4444"
+        />
 
-      {/* Monthly bar chart */}
-      <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl p-4 mb-4">
-        <p className="text-sm font-medium text-stone-600 dark:text-stone-400 mb-4">
+        <Card icon={Target} title="Net Savings"
+          value={formatINR(totalIncome - totalExpenses)}
+          subtitle="After expenses"
+          color="#8b5cf6"
+        />
+
+        <Card icon={BarChart3} title="Total Income"
+          value={formatINR(totalIncome)}
+          subtitle="All earnings"
+          color="#22c55e"
+        />
+
+        <Card icon={Wallet} title="Balance"
+          value={formatINR(totalIncome - totalExpenses)}
+          subtitle="Available now"
+          color="#f59e0b"
+        />
+      </motion.div>
+
+      {/* CHART */}
+      <div className="
+        rounded-xl p-4 mb-6 border
+        bg-white border-stone-200
+        dark:bg-[#111827] dark:border-stone-700
+      ">
+        <p className="text-sm text-stone-600 dark:text-stone-400 mb-4">
           Monthly Comparison
         </p>
+
         <ResponsiveContainer width="100%" height={220}>
-          <BarChart data={monthlyData} barGap={4}>
-            <XAxis dataKey="month" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-            <YAxis
-              tick={{ fontSize: 12 }}
-              axisLine={false}
-              tickLine={false}
-              tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`}
-            />
+          <BarChart data={monthlyData}>
+            <XAxis dataKey="month" stroke="#888" />
+            <YAxis />
             <Legend />
-            <Bar dataKey="income" name="Income" fill="#3a8f6f" radius={[4, 4, 0, 0]} isAnimationActive={false} />
-            <Bar dataKey="expenses" name="Expenses" fill="#c0444a" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+            <Bar dataKey="income" fill="#22c55e" radius={[6, 6, 0, 0]} />
+            <Bar dataKey="expenses" fill="#ef4444" radius={[6, 6, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Expense breakdown */}
-      <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl p-4">
-        <p className="text-sm font-medium text-stone-600 dark:text-stone-400 mb-4">
+      {/* BREAKDOWN */}
+      <div className="
+        rounded-xl p-4 border
+        bg-white border-stone-200
+        dark:bg-[#111827] dark:border-stone-700
+      ">
+        <p className="text-sm text-stone-600 dark:text-stone-400 mb-4">
           Expense Breakdown
         </p>
+
         <div className="flex flex-col gap-3">
           {expensesByCategory.map(([cat, val]) => (
             <div key={cat}>
               <div className="flex justify-between text-xs mb-1">
                 <span className="text-stone-500 dark:text-stone-400">{cat}</span>
-                <span className="text-stone-700 dark:text-stone-300 font-medium">
-                  {formatINR(val)}{" "}
-                  <span className="text-stone-400 font-normal">
-                    ({Math.round((val / totalSpend) * 100)}%)
-                  </span>
+                <span className="text-stone-700 dark:text-white font-medium">
+                  {formatINR(val)}
                 </span>
               </div>
-              <div className="h-1.5 bg-stone-100 dark:bg-stone-800 rounded-full">
+
+              <div className="h-1.5 bg-stone-100 dark:bg-stone-700 rounded-full">
                 <div
                   className="h-full rounded-full"
-                  style={{ width: `${(val / totalSpend) * 100}%`, backgroundColor: COLORS[cat] }}
+                  style={{
+                    width: `${(val / totalSpend) * 100}%`,
+                    backgroundColor: COLORS[cat],
+                  }}
                 />
               </div>
             </div>
           ))}
         </div>
       </div>
+
     </div>
   )
 }

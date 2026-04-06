@@ -1,74 +1,156 @@
 import { useApp } from "../context/AppContext"
-import { CATEGORIES } from "../data/transactions"
+import { CATEGORIES } from "../data/transactionsData"
+import { motion } from "framer-motion"
 
 const inputCls =
-  "border border-stone-200 dark:border-stone-700 rounded-lg px-2.5 py-1.5 text-xs " +
-  "bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 " +
-  "focus:outline-none focus:ring-1 focus:ring-amber-400"
+  "border rounded-lg px-3 py-2 text-sm transition-all duration-200 " +
+
+  /* LIGHT */
+  "border-stone-200 bg-white text-stone-700 placeholder:text-stone-400 " +
+
+  /* DARK (SOFT DARK - NOT BLACK) */
+  "dark:border-white/10 dark:bg-[#111827] dark:text-stone-300 dark:placeholder:text-gray-500 " +
+
+  /* FOCUS */
+  "focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+
+
+/* Animation Variants */
+const container = {
+  hidden: { opacity: 0, y: 20 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      staggerChildren: 0.08
+    }
+  }
+}
+
+const item = {
+  hidden: { opacity: 0, y: 15 },
+  show: { opacity: 1, y: 0 }
+}
 
 export default function TransactionForm({ form, setForm, editId, onSubmit, onCancel }) {
   const { role } = useApp()
 
-  if (!role === "admin") return null
+  if (role !== "admin") return null
 
   return (
-    <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-xl p-3 mb-3">
-      <p className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-2">
-        {editId ? "Edit transaction" : "New transaction"}
-      </p>
+    <motion.div
+      variants={container}
+      initial="hidden"
+      animate="show"
+      className="
+        rounded-xl p-5 mb-4 border
+        
+        /* LIGHT */
+        bg-white border-stone-200 shadow-sm
+        
+        /* DARK (FIXED) */
+        dark:bg-[#111827] dark:border-white/10 dark:shadow-lg
+      "
+    >
+      
+      {/* Title */}
+      <motion.p
+        variants={item}
+        className="text-sm font-semibold mb-4 text-stone-800 dark:text-white"
+      >
+        {editId ? "Edit Transaction" : "New Transaction"}
+      </motion.p>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mb-2">
-        <input
+      {/* Fields */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+        
+        <motion.input
+          variants={item}
           type="date"
           value={form.date}
           onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-          className={inputCls + " w-full"}
+          className={inputCls}
         />
-        <input
+
+        <motion.input
+          variants={item}
           type="text"
           placeholder="Description"
           value={form.description}
           onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-          className={inputCls + " w-full"}
+          className={inputCls}
         />
-        <input
+
+        <motion.input
+          variants={item}
           type="number"
           placeholder="Amount"
           value={form.amount}
           onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
-          className={inputCls + " w-full"}
+          className={inputCls}
         />
-        <select
+
+        <motion.select
+          variants={item}
           value={form.category}
           onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-          className={inputCls + " w-full"}
+          className={inputCls}
         >
-          {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-        </select>
-        <select
+          {CATEGORIES.map((c) => (
+            <option key={c}>{c}</option>
+          ))}
+        </motion.select>
+
+        <motion.select
+          variants={item}
           value={form.type}
           onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
-          className={inputCls + " w-full"}
+          className={inputCls}
         >
           <option value="expense">Expense</option>
           <option value="income">Income</option>
-        </select>
+        </motion.select>
       </div>
 
-      <div className="flex gap-2">
-        <button
+      {/* Buttons */}
+      <motion.div variants={item} className="flex gap-2">
+        
+        {/* Primary */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={onSubmit}
-          className="text-xs px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors"
+          className="
+            text-sm px-4 py-2 rounded-lg text-white transition-all duration-200
+            
+            bg-gradient-to-r from-amber-500 to-orange-500
+            hover:from-amber-600 hover:to-orange-600
+            
+            shadow-sm hover:shadow-md
+          "
         >
           {editId ? "Update" : "Save"}
-        </button>
-        <button
+        </motion.button>
+
+        {/* Secondary */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={onCancel}
-          className="text-xs px-3 py-1.5 border border-stone-200 dark:border-stone-700 rounded-lg text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+          className="
+            text-sm px-4 py-2 rounded-lg border transition-all duration-200
+            
+            /* LIGHT */
+            border-stone-200 text-stone-600 hover:bg-stone-100
+            
+            /* DARK */
+            dark:border-white/10 dark:text-gray-400 dark:hover:bg-white/5
+          "
         >
           Cancel
-        </button>
-      </div>
-    </div>
+        </motion.button>
+
+      </motion.div>
+    </motion.div>
   )
 }

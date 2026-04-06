@@ -1,17 +1,21 @@
 import { useApp } from "../context/AppContext"
 import { Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react"
-import { COLORS } from "../data/transactions"
+import { COLORS } from "../data/transactionsData"
 
 const PER_PAGE = 12
 
-function formatDate(dateStr, opts) {
-  return new Date(dateStr).toLocaleDateString("en-IN", opts)
+function formatDate(dateStr) {
+  const d = new Date(dateStr)
+  return {
+    day: d.toLocaleDateString("en-IN", { day: "2-digit" }),
+    month: d.toLocaleDateString("en-IN", { month: "short" }),
+  }
 }
 
 function CategoryBadge({ category }) {
   return (
     <span
-      className="px-2 py-0.5 rounded text-xs font-medium"
+      className="px-2 py-0.5 rounded text-[10px] font-medium"
       style={{ backgroundColor: COLORS[category] + "20", color: COLORS[category] }}
     >
       {category}
@@ -19,88 +23,110 @@ function CategoryBadge({ category }) {
   )
 }
 
-function TypeBadge({ type }) {
-  const isIncome = type === "income"
-  return (
-    <span
-      className={
-        "text-xs px-2 py-0.5 rounded font-medium " +
-        (isIncome
-          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
-          : "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400")
-      }
-    >
-      {isIncome ? "Income" : "Expense"}
-    </span>
-  )
-}
-
 export default function TransactionTable({ rows, page, setPage, total, onEdit }) {
   const { role, deleteTransaction } = useApp()
-
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE))
 
   return (
-    <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl overflow-hidden">
+    <div className="bg-white dark:bg-[#121826] rounded-xl overflow-hidden">
+
       {rows.length === 0 ? (
-        <p className="text-center py-12 text-sm text-stone-400">No transactions found</p>
+        <p className="text-center py-12 text-sm text-gray-400">
+          No transactions found
+        </p>
       ) : (
         <>
-          {/* Desktop table */}
-          <table className="w-full text-xs hidden md:table">
-            <thead className="border-b border-stone-100 dark:border-stone-800">
+         
+          <div className="md:hidden divide-y divide-gray-200 dark:divide-white/10">
+            {rows.map((tx) => {
+              const date = formatDate(tx.date)
+
+              return (
+                <div key={tx.id} className="px-3 py-3 flex items-center justify-between">
+
+                  {/* LEFT */}
+                  <div>
+                    <p className="text-sm text-gray-800 dark:text-white">
+                      {tx.description}
+                    </p>
+
+                    <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
+                      <span>{date.day} {date.month}</span>
+                      <CategoryBadge category={tx.category} />
+                    </div>
+                  </div>
+
+                  {/* RIGHT */}
+                  <div className="flex items-center gap-3">
+
+                    {/* amount */}
+                    <p
+                      className={
+                        "text-sm font-medium " +
+                        (tx.type === "income"
+                          ? "text-emerald-500"
+                          : "text-white")
+                      }
+                    >
+                      {tx.type === "income" ? "+" : "-"}₹{tx.amount.toLocaleString("en-IN")}
+                    </p>
+
+                    {/* actions */}
+                    {role === "admin" && (
+                      <div className="flex items-center gap-2 text-gray-400">
+                        <button onClick={() => onEdit(tx)}>
+                          <Pencil size={14} />
+                        </button>
+                        <button onClick={() => deleteTransaction(tx.id)}>
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* ✅ DESKTOP TABLE (unchanged) */}
+          <table className="w-full text-sm hidden md:table">
+            <thead className="border-b border-gray-200 dark:border-white/10">
               <tr>
                 {["Date", "Description", "Category", "Type", "Amount", ...(role === "admin" ? [""] : [])].map((h, i) => (
-                  <th key={i} className="text-left text-stone-400 font-medium px-4 py-2.5">
+                  <th key={i} className="text-left text-gray-500 font-medium px-4 py-3">
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
+
             <tbody>
               {rows.map((tx) => (
-                <tr
-                  key={tx.id}
-                  className="border-b border-stone-50 dark:border-stone-800/40 last:border-0"
-                >
-                  <td className="px-4 py-2.5 text-stone-400 whitespace-nowrap">
-                    {formatDate(tx.date, { day: "2-digit", month: "short", year: "numeric" })}
+                <tr key={tx.id} className="border-b border-gray-100 dark:border-white/10">
+                  <td className="px-4 py-3 text-gray-400">
+                    {new Date(tx.date).toLocaleDateString("en-IN")}
                   </td>
-                  <td className="px-4 py-2.5 text-stone-700 dark:text-stone-300">
-                    {tx.description}
-                  </td>
-                  <td className="px-4 py-2.5">
+
+                  <td className="px-4 py-3">{tx.description}</td>
+
+                  <td className="px-4 py-3">
                     <CategoryBadge category={tx.category} />
                   </td>
-                  <td className="px-4 py-2.5">
-                    <TypeBadge type={tx.type} />
+
+                  <td className="px-4 py-3 capitalize">{tx.type}</td>
+
+                  <td className="px-4 py-3">
+                    {tx.type === "income" ? "+" : "-"}₹{tx.amount}
                   </td>
-                  <td
-                    className={
-                      "px-4 py-2.5 font-medium " +
-                      (tx.type === "income"
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-stone-700 dark:text-stone-300")
-                    }
-                  >
-                    {tx.type === "income" ? "+" : "-"}₹{tx.amount.toLocaleString("en-IN")}
-                  </td>
+
                   {role === "admin" && (
-                    <td className="px-4 py-2.5">
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => onEdit(tx)}
-                          className="p-1 text-stone-300 hover:text-amber-500 rounded transition-colors"
-                        >
-                          <Pencil size={12} />
-                        </button>
-                        <button
-                          onClick={() => deleteTransaction(tx.id)}
-                          className="p-1 text-stone-300 hover:text-red-500 rounded transition-colors"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
+                    <td className="px-4 py-3 flex gap-2">
+                      <button onClick={() => onEdit(tx)}>
+                        <Pencil size={14} />
+                      </button>
+                      <button onClick={() => deleteTransaction(tx.id)}>
+                        <Trash2 size={14} />
+                      </button>
                     </td>
                   )}
                 </tr>
@@ -108,76 +134,21 @@ export default function TransactionTable({ rows, page, setPage, total, onEdit })
             </tbody>
           </table>
 
-          {/* Mobile cards */}
-          <div className="md:hidden divide-y divide-stone-100 dark:divide-stone-800">
-            {rows.map((tx) => (
-              <div key={tx.id} className="flex items-center justify-between px-4 py-3">
-                <div className="flex-1 min-w-0 mr-3">
-                  <p className="text-sm text-stone-700 dark:text-stone-300 truncate">
-                    {tx.description}
-                  </p>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-xs text-stone-400">
-                      {formatDate(tx.date, { day: "2-digit", month: "short" })}
-                    </span>
-                    <CategoryBadge category={tx.category} />
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <span
-                    className={
-                      "text-sm font-medium " +
-                      (tx.type === "income"
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-stone-700 dark:text-stone-300")
-                    }
-                  >
-                    {tx.type === "income" ? "+" : "-"}₹{tx.amount.toLocaleString("en-IN")}
-                  </span>
-                  {role === "admin" && (
-                    <div className="flex items-center">
-                      <button
-                        onClick={() => onEdit(tx)}
-                        className="p-1.5 text-stone-300 hover:text-amber-500 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
-                      >
-                        <Pencil size={14} />
-                      </button>
-                      <button
-                        onClick={() => deleteTransaction(tx.id)}
-                        className="p-1.5 text-stone-300 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
           {/* Pagination */}
-          <div className="flex items-center justify-between px-4 py-2.5 border-t border-stone-100 dark:border-stone-800">
-            <p className="text-xs text-stone-400">
+          <div className="flex justify-between px-4 py-3 text-xs text-gray-400">
+            <span>
               {(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, total)} of {total}
-            </p>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setPage((p) => p - 1)}
-                disabled={page === 1}
-                className="p-1.5 rounded text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              >
-                <ChevronLeft size={15} />
+            </span>
+
+            <div className="flex gap-2 items-center">
+              <button onClick={() => setPage(p => p - 1)} disabled={page === 1}>
+                <ChevronLeft size={16} />
               </button>
-              <span className="text-xs text-stone-500 px-1">
-                {page} / {totalPages}
-              </span>
-              <button
-                onClick={() => setPage((p) => p + 1)}
-                disabled={page === totalPages}
-                className="p-1.5 rounded text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              >
-                <ChevronRight size={15} />
+
+              <span>{page}/{totalPages}</span>
+
+              <button onClick={() => setPage(p => p + 1)} disabled={page === totalPages}>
+                <ChevronRight size={16} />
               </button>
             </div>
           </div>

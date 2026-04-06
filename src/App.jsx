@@ -8,7 +8,7 @@ import Insights from "./pages/Insights"
 function PageContent() {
   const { tab } = useApp()
   return (
-    <main className="flex-1 overflow-auto pb-20 md:pb-0 bg-stone-50 dark:bg-stone-950">
+    <main className="flex-1 overflow-auto pb-20 md:pb-0 bg-white dark:bg-[#0B0F19] text-black dark:text-white">
       {tab === "dashboard" && <Dashboard />}
       {tab === "transactions" && <Transactions />}
       {tab === "insights" && <Insights />}
@@ -19,7 +19,7 @@ function PageContent() {
 export default function App() {
   return (
     <AppProvider>
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen bg-white dark:bg-[#0B0F19]">
         <Sidebar />
         <MobileNav />
         <PageContent />
